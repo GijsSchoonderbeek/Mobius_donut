@@ -13,7 +13,7 @@ import DraftVecUtils
 RINGS = 6
 SEGMENTS = RINGS*8
 
-WIDTH = 300
+WIDTH = 150
 THICKNESS = WIDTH/3
 
 def torus(segments, rings, width, height):
@@ -75,7 +75,9 @@ def make_torus(segments, rings, width, thickness):
     :return: null, function will draw the torus in FreeCAD.
     """
     FreeCAD.newDocument()
-    generated_torus = torus(segments, rings, width, thickness)
+    generated_torus_outside = torus(segments, rings, width, thickness)
+    generated_torus_inside = torus(segments, rings, width, thickness*0.75)
+    generated_torus = generated_torus_outside.cut(generated_torus_inside)
     sub_torus = Part.makeTorus(width/2, 1.1*thickness/2, FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 0, 1), 0, 360, 360*(rings-1)/rings)
     cross_section = generated_torus.cut(sub_torus)
     cross_section.translate(FreeCAD.Vector(1.25*(width+thickness), 0, 0))
