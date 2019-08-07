@@ -10,27 +10,32 @@ import Part
 # from pivy import coin
 import DraftVecUtils
 
-SEGMENTS = 48
 RINGS = 6
+SEGMENTS = RINGS*8
+
 WIDTH = 300
-THICKNESS = WIDTH/4
+THICKNESS = WIDTH/3
 
 def torus(segments, rings, width, height):
-    """ Function to make the faces of a sphere which has to be cut to make Streptohedron
     """
-    App.Console.PrintMessage("\n Draw torus based on " + str(segments) + " Segments, " \
-                             + str(segments *rings)  + " Faces \n")
+    Function to make the faces of a torus, where every section is shifted 1/rings degrees
+    :param segments: Number of segment of the torus
+    :param rings: number of ring of each segment
+    :param width: width in mmm of center of the torus
+    :param height: height of the torus
+    :return: solid of the torus
+    """
+    App.Console.PrintMessage("\n Draw torus based on " + str(segments) + " Segments, "
+                             + str(segments * rings) + " Faces \n")
     x_base = FreeCAD.Vector(width / 2, 0, 0)
     z_base = FreeCAD.Vector(height / 2, 0, 0)
 
     total_faces = rings*segments
     vertex = []
+    for vertex_cnt in range(total_faces):
 
-    for virtex_cnt in range(total_faces):
-
-        r_angle = virtex_cnt * (2 * math.pi * (rings-1) / (rings * segments))
-        s_angle = virtex_cnt * (2 * math.pi / segments)
-        print('r_angel : {:2.2f}, s_angle : {:2.2f}'.format((360 * r_angle)/(2 * math.pi), (360 * s_angle)/(2 * math.pi)))
+        r_angle = vertex_cnt * (2 * math.pi * (rings-1) / (rings * segments))
+        s_angle = vertex_cnt * (2 * math.pi / segments)
         rz_base = DraftVecUtils.rotate(z_base, r_angle, FreeCAD.Vector(0, 1, 0))
         vertex.append(DraftVecUtils.rotate(x_base+rz_base, s_angle))
     faces = []
@@ -49,28 +54,32 @@ def torus(segments, rings, width, height):
 
 def make_face(vertex_1, vertex_2, vertex_3):
     """
-    Function to make the faces
+     Function to make the faces
+    :param vertex_1: first point of the triangle to make the face
+    :param vertex_2: second point of the triangle to make the face
+    :param vertex_3: third point of the triangle to make the face
+    :return: the created fase
     """
     wire = Part.makePolygon([vertex_1, vertex_2, vertex_3, vertex_1])
     face = Part.Face(wire)
     return face
 
 
-def make_face_rect(vertex_1, vertex_2, vertex_3, vertex_4):
+def make_torus(segments, rings, width, thickness):
     """
-    Function to make the faces
-    """
-    wire = Part.makePolygon([vertex_1, vertex_2, vertex_3, vertex_4, vertex_1])
-    face = Part.Face(wire)
-    return face
-
-def make_torus(sides, rings, width, thickness):
-    """
-    Function to make sphere in FreeCAD
+    Function to make torus in FreeCAD
+    :param segments: number of segments of the torus
+    :param rings: number of segments of each segment
+    :param width: with of the torus
+    :param thickness: height / thickness of the torus
+    :return: null, function will draw the torus in FreeCAD.
     """
     FreeCAD.newDocument()
-    generated_torus = torus(sides, rings, width, thickness)
+    generated_torus = torus(segments, rings, width, thickness)
+    sub_torus = Part.makeTorus(width/2, 1.1*thickness/2, FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 0, 1), 0, 360, 360*(rings-1)/rings)
+    cross_section = generated_torus.cut(sub_torus)
+    cross_section.translate(FreeCAD.Vector(1.25*(width+thickness), 0, 0))
     Part.show(generated_torus)
-
+    Part.show(cross_section)
 
 make_torus(SEGMENTS, RINGS, WIDTH, THICKNESS)
